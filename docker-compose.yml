@@ -4,6 +4,7 @@ services:
     build: ./application/
     container_name: "application"
     hostname: "application"
+    restart: on-failure:5
     environment:
       DB_SERVICE_NAME: mysql
       MYSQL_USER: root
@@ -12,11 +13,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - registrator
+      - mysql
   consul:
     image: "progrium/consul:latest"
     container_name: "consul"
     hostname: "consul"
+    restart: on-failure:5
     environment:
       SERVICE_53_IGNORE: 'yes'
       SERVICE_8300_IGNORE: 'yes'
@@ -35,6 +37,7 @@ services:
     image: gliderlabs/registrator:latest
     container_name: 'registrator'
     hostname: "registrator"
+    restart: on-failure:5
     volumes:
       - "/var/run/docker.sock:/tmp/docker.sock"
     depends_on:
@@ -44,6 +47,7 @@ services:
     image: mysql:latest
     container_name: 'mysql'
     hostname: "mysql"
+    restart: on-failure:5
     environment:
       - MYSQL_USER=root
       - MYSQL_DATABASE=mysqldb

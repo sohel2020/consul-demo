@@ -1,5 +1,6 @@
 import json
 import os
+from time import sleep
 import pymysql.cursors
 import requests
 from flask import Flask
@@ -11,6 +12,8 @@ DB_SERVICE_NAME = os.environ.get('DB_SERVICE_NAME','mysql')
 TABLE_NAME = 'tbl_msg'
 
 def get_config():
+        print "Waiting to connect......"
+        sleep(18)
         url = BASE_CONSUL_URL + '/v1/catalog/service/' + DB_SERVICE_NAME 
         response = requests.get(url)
         result = json.loads(response.content.decode('utf-8'))
@@ -28,17 +31,19 @@ if data is not None:
 
 
 # database connection create 
-connection = pymysql.connect(host=DB_HOST,
-                             user=MYSQL_USER,
-                             password=MYSQL_ROOT_PASSWORD,
-                             port=DB_PORT,
-                             db=MYSQL_DATABASE,
-                             charset='utf8mb4',
-                             cursorclass=pymysql.cursors.DictCursor)
+
+def create_connection():      
+        return pymysql.connect(host=DB_HOST,
+                        user=MYSQL_USER,
+                        password=MYSQL_ROOT_PASSWORD,
+                        port=DB_PORT,
+                        db=MYSQL_DATABASE,
+                        charset='utf8mb4',
+                        cursorclass=pymysql.cursors.DictCursor)
 
 
 
-def tbl_create():
+def tbl_create(connection):
         cursor = connection.cursor()
         create_tbl = '''CREATE TABLE IF NOT EXISTS `{}` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -49,14 +54,14 @@ def tbl_create():
         cursor.execute(create_tbl)
         cursor.close()
 
-def insert_data():
+def insert_data(connection):
         cursor = connection.cursor()
         sql =  "INSERT INTO `{}` (`msg`) VALUES (%s)".format(TABLE_NAME)
         cursor.execute(sql, ('Hello, world'))
         connection.commit()
         cursor.close()
 
-def get_msg():
+def get_msg(connection):
         with connection.cursor() as cursor:
                 sql = "SELECT `msg` FROM `{}` WHERE `id`=%s".format(TABLE_NAME)
                 cursor.execute(sql, ('1'))
@@ -66,8 +71,8 @@ def get_msg():
         return result
 
 
-def checkTableExists(dbconnection):
-        cursor = dbconnection.cursor()
+def checkTableExists(connection):
+        cursor = connection.cursor()
         stmt = "SHOW TABLES LIKE '{}'".format(TABLE_NAME)
         cursor.execute(stmt)
         exist = cursor.fetchone()
@@ -77,17 +82,22 @@ def checkTableExists(dbconnection):
         else:
                 return False
 
-# check if table exists
-if not checkTableExists(connection):
-        tbl_create()
-        insert_data()
+
 
 app = Flask(__name__)
+app.debug = True
 @app.route('/')
 def home():
-	res = get_msg()
-	return res
-
+        connection = create_connection()
+        if connection:
+                # check if table exists
+                if not checkTableExists(connection):
+                        tbl_create(connection)
+                        insert_data(connection)
+                res = get_msg(connection)
+                return res
+        else:
+            return "Warming up database connection :) "
 
 app.run(host="0.0.0.0", port=PORT)
 
