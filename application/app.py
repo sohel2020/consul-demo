@@ -1,6 +1,5 @@
 import json
 import os
-from time import sleep
 import pymysql.cursors
 import requests
 from flask import Flask
