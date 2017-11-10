@@ -1,4 +1,4 @@
-version: "2"
+version: "2.1"
 services:
   app:
     build: ./application/
@@ -13,7 +13,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+
   consul:
     image: "progrium/consul:latest"
     container_name: "consul"
@@ -52,6 +54,10 @@ services:
       - MYSQL_USER=root
       - MYSQL_DATABASE=mysqldb
       - MYSQL_ROOT_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10  
     ports:
       - "3306"  
     depends_on:

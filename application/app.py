@@ -12,8 +12,6 @@ DB_SERVICE_NAME = os.environ.get('DB_SERVICE_NAME','mysql')
 TABLE_NAME = 'tbl_msg'
 
 def get_config():
-        print "Waiting to connect......"
-        sleep(18)
         url = BASE_CONSUL_URL + '/v1/catalog/service/' + DB_SERVICE_NAME 
         response = requests.get(url)
         result = json.loads(response.content.decode('utf-8'))
@@ -89,15 +87,11 @@ app.debug = True
 @app.route('/')
 def home():
         connection = create_connection()
-        if connection:
-                # check if table exists
-                if not checkTableExists(connection):
-                        tbl_create(connection)
-                        insert_data(connection)
-                res = get_msg(connection)
-                return res
-        else:
-            return "Warming up database connection :) "
-
+        if not checkTableExists(connection):                
+                tbl_create(connection)
+                insert_data(connection)
+        res = get_msg(connection)
+        return res
+       
 app.run(host="0.0.0.0", port=PORT)
 
