@@ -28,7 +28,7 @@ if data is not None:
 
 
 # database connection create 
-connection = pymysql.connect(host="52.76.228.210",
+connection = pymysql.connect(host=DB_HOST,
                              user=MYSQL_USER,
                              password=MYSQL_ROOT_PASSWORD,
                              port=DB_PORT,
