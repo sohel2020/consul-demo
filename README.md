@@ -9,8 +9,14 @@
 ```bash
 $ git clone https://github.com/sohel2020/consul-demo.git
 $ cd consul-demo
-$ docker-compose build 
+$ docker-compose build --no-cache
 $ docker-compose up -d
+```
+
+## Show all application logs
+
+```bash
+$ docker-compose logs -f
 ```
 
 ## Open Your favorite browser and hit `http://127.0.0.1:8080`
