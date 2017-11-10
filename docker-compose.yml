@@ -1,0 +1,54 @@
+version: "2"
+services:
+  app:
+    build: ./appliation/
+    container_name: "application"
+    hostname: "application"
+    environment:
+      DB_SERVICE_NAME: mysql
+      MYSQL_USER: root
+      MYSQL_DATABASE: mysqldb 
+      MYSQL_ROOT_PASSWORD: root 
+    ports:
+      - "8080:8080"
+    depends_on:
+      - registrator
+  consul:
+    image: "progrium/consul:latest"
+    container_name: "consul"
+    hostname: "consul"
+    environment:
+      SERVICE_53_IGNORE: 'yes'
+      SERVICE_8300_IGNORE: 'yes'
+      SERVICE_8301_IGNORE: 'yes'
+      SERVICE_8302_IGNORE: 'yes'
+      SERVICE_8400_IGNORE: 'yes'
+      SERVICE_8500_NAME: 'consul-admin'
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53"
+    command: "-server -bootstrap -ui-dir /ui"   
+  
+  registrator:
+    command: "-internal consul://consul:8500"
+    image: gliderlabs/registrator:latest
+    container_name: 'registrator'
+    hostname: "registrator"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock"
+    depends_on:
+      - consul  
+
+  mysql:
+    image: mysql:latest
+    container_name: 'mysql'
+    hostname: "mysql"
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_DATABASE=mysqldb
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306"  
+    depends_on:
+      - registrator
