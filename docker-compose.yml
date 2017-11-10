@@ -1,7 +1,7 @@
 version: "2"
 services:
   app:
-    build: ./appliation/
+    build: ./application/
     container_name: "application"
     hostname: "application"
     environment:
