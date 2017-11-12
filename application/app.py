@@ -4,7 +4,7 @@ from time import sleep
 import pymysql.cursors
 import requests
 from flask import Flask
-
+import sys
 
 PORT = 8080
 BASE_CONSUL_URL = 'http://consul:8500'
@@ -13,10 +13,11 @@ TABLE_NAME = 'tbl_msg'
 
 def get_config():
         url = BASE_CONSUL_URL + '/v1/catalog/service/' + DB_SERVICE_NAME 
-        response = requests.get(url)
-        result = json.loads(response.content.decode('utf-8'))
-        r = result[0] 
-        return r
+        try :    
+            return json.loads( (requests.get(url) ).content.decode('utf-8'))[0]
+        except Exception, e :
+            sys.exit('URL not responding')
+
 
 data = get_config()
 
@@ -30,15 +31,17 @@ if data is not None:
 
 # database connection create 
 
-def create_connection():      
-        return pymysql.connect(host=DB_HOST,
+def create_connection():
+        try:
+                return pymysql.connect(host=DB_HOST,
                         user=MYSQL_USER,
                         password=MYSQL_ROOT_PASSWORD,
                         port=DB_PORT,
                         db=MYSQL_DATABASE,
                         charset='utf8mb4',
                         cursorclass=pymysql.cursors.DictCursor)
-
+        except Exception, e:
+                sys.exit("DB connection Error")
 
 
 def tbl_create(connection):
@@ -91,6 +94,7 @@ def home():
                 tbl_create(connection)
                 insert_data(connection)
         res = get_msg(connection)
+        connection.close()
         return res
        
 app.run(host="0.0.0.0", port=PORT)
